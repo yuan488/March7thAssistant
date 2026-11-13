@@ -69,7 +69,12 @@ jobs:
 
       - name: Ad-hoc sign and archive
         run: |
-          # PyInstaller 已逐个签名 Mach-O 文件；库与资源已按 macOS 目录规范放置。
+          # 冒烟测试会生成日志和配置；签名前清掉，MacOS 目录仅保留程序与资源链接。
+          APP="dist/March7th Assistant.app"
+          MACOS="$APP/Contents/MacOS"
+          find "$MACOS" -mindepth 1 -maxdepth 1 \
+            ! -name 'March7th Launcher' ! -name 'March7th Assistant' \
+            ! -name 'libraries' ! -name 'assets' -exec rm -rf {} +
           codesign --force --sign - "dist/March7th Assistant.app"
           codesign --display --verbose=2 "dist/March7th Assistant.app"
           ditto -c -k --keepParent "dist/March7th Assistant.app" "dist/March7thAssistant-macOS-arm64.zip"
