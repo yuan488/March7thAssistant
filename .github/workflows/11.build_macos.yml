@@ -64,6 +64,8 @@ jobs:
       - name: Ad-hoc sign and archive
         run: |
           # PyInstaller 已逐个签名 Mach-O 文件；不要对第三方 .dylibs 目录递归签名。
+          # .pyi 仅为类型声明，macOS 会误将其识别为未签名的嵌套代码。
+          find "dist/March7th Assistant.app" -type f -name '*.pyi' -delete
           codesign --force --sign - "dist/March7th Assistant.app"
           codesign --display --verbose=2 "dist/March7th Assistant.app"
           ditto -c -k --keepParent "dist/March7th Assistant.app" "dist/March7thAssistant-macOS-arm64.zip"
