@@ -16,7 +16,6 @@ common_hiddenimports = [
     'selenium.webdriver.chromium.service',
     'selenium.webdriver.chromium.options',
     'selenium.webdriver.remote.webdriver',
-    'selenium.webdriver.remote.connection',
     'selenium.webdriver.common.service',
     'selenium.webdriver.common.selenium_manager',
 ]
@@ -41,7 +40,7 @@ launcher = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=OPENSSL_RUNTIME_HOOKS,
-    excludes=[],
+    excludes=['openvino', 'openvino_telemetry'],
     noarchive=False,
     optimize=0,
 )
@@ -100,7 +99,7 @@ cli = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=OPENSSL_RUNTIME_HOOKS,
-    excludes=['PySide6'],
+    excludes=['PySide6', 'openvino', 'openvino_telemetry'],
     noarchive=False,
     optimize=0,
 )
