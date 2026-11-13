@@ -67,19 +67,14 @@ jobs:
           "$MACOS/March7th Assistant" --list --json
           test -f "$MACOS/assets/config/config.example.yaml"
 
-      - name: Sign executables and archive
+      - name: Archive application
         run: |
-          # 第三方库包含 JSON/JS/PYI，不能作为嵌套代码参与应用级递归签名。
-          # PyInstaller 已签名全部运行库，这里只对两个真正的可执行文件重签名。
+          # PyInstaller 已完成 Mach-O 签名；在 .app 内重复 codesign 会错误遍历第三方资源。
           APP="dist/March7th Assistant.app"
           MACOS="$APP/Contents/MacOS"
           find "$MACOS" -mindepth 1 -maxdepth 1 \
             ! -name 'March7th Launcher' ! -name 'March7th Assistant' \
             ! -name 'libraries' ! -name 'assets' -exec rm -rf {} +
-          codesign --force --sign - "$MACOS/March7th Launcher"
-          codesign --force --sign - "$MACOS/March7th Assistant"
-          codesign --verify --strict "$MACOS/March7th Launcher"
-          codesign --verify --strict "$MACOS/March7th Assistant"
           ditto -c -k --keepParent "dist/March7th Assistant.app" "dist/March7thAssistant-macOS-arm64.zip"
           shasum -a 256 "dist/March7thAssistant-macOS-arm64.zip"
 
