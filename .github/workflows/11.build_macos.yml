@@ -46,10 +46,10 @@ jobs:
           cp "dist/March7th Assistant CLI/March7th Assistant" "$MACOS/March7th Assistant"
           cp -R "dist/March7th Assistant CLI/libraries" "$MACOS/libraries"
           cp -R assets "$MACOS/assets"
-          cp README.md "$MACOS/README.md"
-          cp assets/agent/AGENTS.md "$MACOS/AGENTS.md"
-          # 非可执行资源不得长期放在 Contents/MacOS，否则 codesign 会将 .pyi/.js 误判为嵌套程序。
           mkdir -p "$APP/Contents/Frameworks" "$APP/Contents/Resources"
+          cp README.md "$APP/Contents/Resources/README.md"
+          cp assets/agent/AGENTS.md "$APP/Contents/Resources/AGENTS.md"
+          # Contents/MacOS 只保留可执行文件与必要的资源链接，避免 codesign 误判。
           mv "$MACOS/libraries" "$APP/Contents/Frameworks/libraries"
           ln -s ../Frameworks/libraries "$MACOS/libraries"
           mv "$MACOS/assets" "$APP/Contents/Resources/assets"
