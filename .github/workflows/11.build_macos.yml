@@ -1,0 +1,77 @@
+name: Build macOS Apple Silicon
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      PYTHONHASHSEED: 0
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "0.13.0"
+          python-version: "3.14.8"
+          enable-cache: true
+          cache-python: true
+          prune-cache: false
+
+      - name: Install dependencies
+        run: |
+          uv sync --group build
+          uv run python build.py --task ocr
+
+      - name: Create macOS icon
+        run: |
+          mkdir -p assets/logo/March7th.iconset
+          uv run python -c "from PIL import Image; from pathlib import Path; im=Image.open('assets/logo/March7th.ico').convert('RGBA'); p=Path('assets/logo/March7th.iconset'); [(im.resize((s,s), Image.Resampling.LANCZOS).save(p/f'icon_{s}x{s}.png'), im.resize((s*2,s*2), Image.Resampling.LANCZOS).save(p/f'icon_{s}x{s}@2x.png')) for s in (16,32,128,256,512)]"
+          iconutil -c icns assets/logo/March7th.iconset -o assets/logo/March7th.icns
+
+      - name: Build application and CLI
+        run: uv run pyinstaller --distpath ./dist "./March7th macOS.spec" -y
+
+      - name: Assemble application bundle
+        run: |
+          APP="dist/March7th Assistant.app"
+          MACOS="$APP/Contents/MacOS"
+          cp "dist/March7th Assistant CLI/March7th Assistant" "$MACOS/March7th Assistant"
+          cp -R "dist/March7th Assistant CLI/libraries" "$MACOS/libraries"
+          cp -R assets "$MACOS/assets"
+          cp README.md "$MACOS/README.md"
+          cp assets/agent/AGENTS.md "$MACOS/AGENTS.md"
+          chmod +x "$MACOS/March7th Launcher" "$MACOS/March7th Assistant"
+
+      - name: Verify executable architecture and CLI
+        run: |
+          APP="dist/March7th Assistant.app"
+          MACOS="$APP/Contents/MacOS"
+          file "$MACOS/March7th Launcher" "$MACOS/March7th Assistant"
+          lipo -archs "$MACOS/March7th Launcher"
+          lipo -archs "$MACOS/March7th Assistant"
+          "$MACOS/March7th Assistant" --version
+          "$MACOS/March7th Assistant" --list --json
+          test -f "$MACOS/assets/config/config.example.yaml"
+
+      - name: Ad-hoc sign and archive
+        run: |
+          codesign --deep --force --sign - "dist/March7th Assistant.app"
+          codesign --verify --deep --strict --verbose=2 "dist/March7th Assistant.app"
+          ditto -c -k --keepParent "dist/March7th Assistant.app" "dist/March7thAssistant-macOS-arm64.zip"
+          shasum -a 256 "dist/March7thAssistant-macOS-arm64.zip"
+
+      - name: Upload application
+        uses: actions/upload-artifact@v6
+        with:
+          name: March7thAssistant-macOS-arm64
+          path: dist/March7thAssistant-macOS-arm64.zip
+          if-no-files-found: error
+          retention-days: 7
