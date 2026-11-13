@@ -63,8 +63,9 @@ jobs:
 
       - name: Ad-hoc sign and archive
         run: |
-          codesign --deep --force --sign - "dist/March7th Assistant.app"
-          codesign --verify --deep --strict --verbose=2 "dist/March7th Assistant.app"
+          # PyInstaller 已逐个签名 Mach-O 文件；不要对第三方 .dylibs 目录递归签名。
+          codesign --force --sign - "dist/March7th Assistant.app"
+          codesign --verify --strict --verbose=2 "dist/March7th Assistant.app"
           ditto -c -k --keepParent "dist/March7th Assistant.app" "dist/March7thAssistant-macOS-arm64.zip"
           shasum -a 256 "dist/March7thAssistant-macOS-arm64.zip"
 
