@@ -1475,11 +1475,14 @@ class LogInterface(ScrollArea):
 
         # 构建命令
         if getattr(sys, 'frozen', False):
-            executable_path = os.path.abspath("./March7th Assistant.exe")
+            executable_name = "March7th Assistant.exe" if sys.platform == "win32" else "March7th Assistant"
+            executable_path = os.path.abspath(os.path.join(os.path.dirname(sys.executable), executable_name))
             if not os.path.exists(executable_path):
-                self.appendLog("错误: 未找到可执行文件 March7th Assistant.exe" + "\n")
-                self.appendLog("请将`小助手文件夹`加入杀毒软件排除项/白名单/信任区，然后重新解压覆盖一次" + "\n")
-                self.appendLog("具体操作方法可以参考“常见问题”（FAQ）" + "\n")
+                self.appendLog(f"错误: 未找到可执行文件 {executable_name}" + "\n")
+                if sys.platform == "win32":
+                    self.appendLog("请将`小助手文件夹`加入杀毒软件排除项/白名单/信任区，然后重新解压覆盖一次" + "\n")
+                else:
+                    self.appendLog("请重新下载并完整解压 macOS 应用包" + "\n")
                 self._onProcessFinished(-1, QProcess.CrashExit, proc)
                 return
             # 将工作目录设置为可执行文件所在目录
@@ -1728,7 +1731,8 @@ class LogInterface(ScrollArea):
         if step_path not in (None, ''):
             command.extend(['--workflow-step-path', str(step_path)])
         if getattr(sys, 'frozen', False):
-            program = os.path.abspath('./March7th Assistant.exe')
+            executable_name = "March7th Assistant.exe" if sys.platform == "win32" else "March7th Assistant"
+            program = os.path.abspath(os.path.join(os.path.dirname(sys.executable), executable_name))
             return program, shlex.join(command)
         program = sys.executable
         return program, shlex.join([os.path.abspath('main.py'), *command])

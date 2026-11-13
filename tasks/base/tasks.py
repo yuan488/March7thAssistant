@@ -16,18 +16,21 @@ def execute_command_in_new_environment(command, use_windows_terminal=False):
     在新的环境中执行给定的命令。
     """
     if getattr(sys, 'frozen', False):
-        if not os.path.exists("./March7th Assistant.exe"):
-            exception = Exception("未找到可执行文件：March7th Assistant.exe，\n请将`小助手文件夹`加入杀毒软件排除项/白名单/信任区后，\n然后重新解压覆盖一次")
-            raise exception
-
-    executable_path = os.path.abspath("./March7th Assistant.exe") if getattr(sys, 'frozen', False) else sys.executable
+        executable_name = "March7th Assistant.exe" if sys.platform == "win32" else "March7th Assistant"
+        executable_path = os.path.abspath(os.path.join(os.path.dirname(sys.executable), executable_name))
+        if not os.path.exists(executable_path):
+            raise Exception(f"未找到可执行文件：{executable_name}\n请重新下载并完整解压应用包")
+    else:
+        executable_path = sys.executable
     main_script = [] if getattr(sys, 'frozen', False) else ["main.py"]
 
-    if use_windows_terminal:
+    if sys.platform != "win32":
+        subprocess.Popen([executable_path] + main_script + [command])
+    elif use_windows_terminal:
         # 尝试使用 Windows Terminal 执行命令
         try:
             subprocess.Popen(["wt", executable_path] + main_script + [command], creationflags=subprocess.DETACHED_PROCESS)
-        except:
+        except Exception:
             # 如果执行失败，则回退到创建新控制台的方式执行
             subprocess.Popen([executable_path] + main_script + [command], creationflags=subprocess.CREATE_NEW_CONSOLE)
     else:
